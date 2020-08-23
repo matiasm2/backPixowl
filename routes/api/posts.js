@@ -9,24 +9,28 @@ const jwt = require('jsonwebtoken');
 
 
 
-const {User} = require('../../database/models/index');
+const {Like, Post, User} = require('../../database/models/index');
 
 router.all('/', validateToken);
 
-router.post('/create', async function(req, res, next) {
-  const user = await User.findOne({where: {
-    email: req.body.email,
-  }});
+router.get('/', function(req, res, next) {
 
-  if (user && bcrypt.compareSync(req.body.password, user.password)) {
-    const token = jwt.sign({
-      id: user.id,
-      email: user.email
-    }, process.env.JWTKEY);
+});
 
-    res.send({token: token});
-  } else {
-    res.json({error: 'User or password was invalid'});
+router.get('/:id', function(req, res, next) {
+
+});
+
+router.post('/', async function(req, res, next) {
+  try {
+
+    const post = await Post.create(req.body);
+    post.creator = await User.findByPk(req.sessionData.id);
+    post.save();
+    res.send(post);
+  } catch (err) {
+    console.log(err)
+    res.sendStatus(500);
   }
 });
 
@@ -36,7 +40,8 @@ function validateToken(req, res, next) {
   if (typeof bearer !== 'undefined') {
     req.token = bearer.split(' ')[1];
     try{
-      jwt.validateToken(req.token, process.env.JWTKEY);
+      req.sessionData = jwt.verify(req.token, process.env.JWTKEY);
+
     } catch(err) {
       console.log(err);
       res.sendStatus(403);

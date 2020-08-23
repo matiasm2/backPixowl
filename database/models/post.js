@@ -12,12 +12,15 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Post.hasOne(models.User, {as: 'creator'});
+      Post.belongsTo(models.User);
       Post.belongsToMany(models.User, {through: models.Like});
     }
   };
   Post.init({
-    image: DataTypes.BLOB,
+    image: {
+      type: DataTypes.BLOB,
+      allowNull: false,
+    },
     description: DataTypes.STRING,
   }, {
     sequelize,
