@@ -4,13 +4,10 @@
 const express = require('express');
 const router = express.Router();
 
+const apiPostsRouter = require('./api/posts');
 const apiUserRouter = require('./api/user');
 
+router.use('/posts', apiPostsRouter);
 router.use('/user', apiUserRouter);
-
-router.post('/', function(req, res, next) {
-  console.log(req.body);
-  res.send(req.body);
-});
 
 module.exports = router;
