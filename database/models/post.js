@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
   };
   Post.init({
     image: {
-      type: DataTypes.BLOB,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     description: DataTypes.STRING,

@@ -4,8 +4,7 @@
 
 const express = require('express');
 const router = express.Router();
-const {validateToken} = require('../middlewares');
-const {check, validationResult} = require('express-validator');
+const {validateToken, upload} = require('../middlewares');
 const {Like, Post} = require('../../database/models/index');
 
 router.all('/', validateToken);
@@ -41,21 +40,14 @@ router.get('/:id', async function(req, res, next) {
   }
 });
 
-router.post('/', [
-  check('image', 'The image is mandatory').not().isEmpty(),
-  check('image', 'The image must have a data uri format').isDataURI(),
-], async function(req, res, next) {
+router.post('/', upload.single('image'), async function(req, res, next) {
+  if (req.errorMessage) {
+    res.status(400).json({error: req.errorMessage});
+  }
   try {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res.status(422).json({
-        errors: errors.array(),
-      });
-    }
     req.body.UserId = req.sessionData.UserId;
+    req.body.image = `${req.headers.host}/api/image/${req.file.filename}`;
     const post = await Post.create(req.body);
-    post.save();
     res.send(post);
   } catch (err) {
     console.log(err);
