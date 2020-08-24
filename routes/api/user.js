@@ -7,8 +7,6 @@ const bcrypt = require('bcrypt');
 const {check, validationResult} = require('express-validator');
 const jwt = require('jsonwebtoken');
 
-
-
 const {User} = require('../../database/models/index');
 
 router.post('/login', async function(req, res, next) {
@@ -18,9 +16,9 @@ router.post('/login', async function(req, res, next) {
 
   if (user && bcrypt.compareSync(req.body.password, user.password)) {
     const token = jwt.sign({
-      id: user.id,
-      email: user.email
-    }, process.env.JWTKEY);
+      UserId: user.id,
+      email: user.email,
+    }, process.env.JWTKEY, {expiresIn: '10m'});
 
     res.send({token: token});
   } else {
@@ -41,19 +39,17 @@ router.post('/register', [
   }
 
   req.body.password = bcrypt.hashSync(req.body.password, 10);
-  try{
-    const user = await User.create(req.body);
-    res.send(user);
+  try {
+    await User.create(req.body);
+    res.send('User was created!');
   } catch (err) {
     const errors = [];
     err.errors.forEach((error) => {
-      errors.push(error.message)
-    })
+      errors.push(error.message);
+    });
     console.log(errors);
     res.json({errors});
   };
-  
-  
 });
 
 module.exports = router;
