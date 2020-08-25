@@ -12,7 +12,36 @@ router.all('/like', validateToken);
 
 router.get('/', async function(req, res, next) {
   try {
-    const posts = await Post.findAll();
+    let {page = 0, pageSize = 25} = req.query;
+    page = parseInt(page)-1;
+    pageSize = parseInt(pageSize);
+    const paginate = async ({page, pageSize}) => {
+      console.log('ENTROOO');
+      const postsAmmount = await Post.count();
+      let offset = page * pageSize;
+      if (offset > postsAmmount) {
+        offset = 0;
+      }
+      const limit = pageSize;
+
+      return {
+        offset,
+        limit,
+      };
+    };
+    const posts = await Post.findAndCountAll({
+      ...await paginate({page, pageSize}),
+      order: [
+        ['updatedAt', 'DESC'],
+      ],
+      attributes: [
+        `id`,
+        `image`,
+        `description`,
+        `createdAt`,
+      ],
+    },
+    );
     res.send(posts);
   } catch (err) {
     console.log(err);
@@ -23,17 +52,21 @@ router.get('/', async function(req, res, next) {
 router.get('/:id', async function(req, res, next) {
   try {
     const post = await Post.findByPk(req.params.id);
-    const user = await post.getUser();
-    const likes = await Like.count({where: {
-      PostId: post.id,
-      active: true,
-    }});
-    res.json({
-      user: user.email,
-      image: post.image,
-      description: post.description,
-      likes: likes,
-    });
+    if (!post) {
+      res.status(404).json({error: 'Post not found'});
+    } else {
+      const user = await post.getUser();
+      const likes = await Like.count({where: {
+        PostId: post.id,
+        active: true,
+      }});
+      res.json({
+        user: user.email,
+        image: post.image,
+        description: post.description,
+        likes: likes,
+      });
+    }
   } catch (err) {
     console.log(err);
     res.status(500).json({error: err.message});

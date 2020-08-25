@@ -12,7 +12,7 @@ router.get('/:imageName', validateToken, function(req, res, next) {
   res.download(imagePath, req.params.imageName, (err) => {
     if (err) {
       if (err.message.indexOf('no such file or directory') != -1) {
-        res.status(400).json({error: 'no such image'});
+        res.status(404).json({error: 'Image not found'});
       } else {
         console.log(err.message);
         res.sendStatus(500);
